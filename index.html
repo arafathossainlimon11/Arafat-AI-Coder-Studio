@@ -42,14 +42,14 @@
         </div>
     </div>
 
-    <!-- Key Prompt Modal (If no key exists) -->
+    <!-- Key Prompt Modal -->
     <div id="keyModal" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-40 p-4 hidden">
         <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl w-full max-w-md shadow-2xl text-center">
             <div class="w-16 h-16 bg-yellow-600/20 text-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
                 <i class="fa-solid fa-key"></i>
             </div>
             <h2 class="text-xl font-bold mb-2">OpenRouter API Key দিন</h2>
-            <p class="text-gray-400 text-xs mb-4">গিটহাব সিকিউরিটির জন্য এটি তোমার ফোনে সেভ থাকবে।</p>
+            <p class="text-gray-400 text-xs mb-4">গিটহাব সিকিউরিটির জন্য এটি তোমার ফোনে নিরাপদে সেভ থাকবে।</p>
             <input type="text" id="keyInputModal" placeholder="sk-or-v1-..." class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 mb-4 text-white text-sm focus:outline-none focus:border-yellow-500">
             <button onclick="saveKeyFromModal()" class="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-semibold py-3 rounded-xl transition duration-200">
                 API Key সেভ করুন
@@ -70,7 +70,7 @@
         </button>
 
         <div id="historyList" class="flex-1 overflow-y-auto space-y-2 pr-1">
-            <!-- History items will be injected here -->
+            <!-- History items -->
         </div>
 
         <div class="pt-4 border-t border-gray-800">
@@ -89,7 +89,7 @@
             <div>
                 <h1 class="font-bold text-lg leading-tight">Arafat AI Studio</h1>
                 <p class="text-xs text-green-400 flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Unrestricted Mode
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Auto-Free Engine Active
                 </p>
             </div>
         </div>
@@ -108,7 +108,7 @@
         <div class="flex gap-4 items-start bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50">
             <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">AI</div>
             <div class="prose text-gray-300 text-sm md:text-base">
-                হ্যালো আরাফাত! আমি তোমার পার্সোনাল আনরেস্ট্রিক্টেড এআই স্টুডিও। যেকোনো কোডিং, কথাবার্তা বা ছবি/ফাইলের বিশ্লেষণের জন্য প্রস্তুত। কী কাজ শুরু করব বল!
+                হ্যালো আরাফাত! আমি তোমার পার্সোনাল আনরেস্ট্রিক্টেড এআই স্টুডিও। যেকোনো কোডিং বা আলোচনার জন্য প্রস্তুত। কী তৈরি করতে চাও বলো!
             </div>
         </div>
     </main>
@@ -127,10 +127,9 @@
     <footer class="bg-gray-900 border-t border-gray-800 p-4 sticky bottom-0">
         <div class="max-w-4xl mx-auto flex items-end gap-2 bg-gray-800/80 border border-gray-700/60 rounded-2xl p-2 focus-within:border-blue-500 transition">
             
-            <!-- Hidden File Input -->
             <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleImageSelect(event)">
             
-            <button onclick="document.getElementById('fileInput').click()" class="p-3 text-gray-400 hover:text-green-400 transition rounded-xl" title="ছবি বা ফাইল আপলোড">
+            <button onclick="document.getElementById('fileInput').click()" class="p-3 text-gray-400 hover:text-green-400 transition rounded-xl" title="ছবি আপলোড">
                 <i class="fa-solid fa-image text-lg"></i>
             </button>
 
@@ -138,7 +137,7 @@
                 <i class="fa-solid fa-microphone text-lg"></i>
             </button>
 
-            <textarea id="userInput" rows="1" placeholder="মেসেজ, প্রম্পট বা ছবি নিয়ে কিছু লিখুন..." class="flex-1 bg-transparent border-0 text-white placeholder-gray-500 focus:ring-0 resize-none p-2 max-h-32 text-sm md:text-base focus:outline-none"></textarea>
+            <textarea id="userInput" rows="1" placeholder="মেসেজ, কোডিং প্রম্পট বা ছবি নিয়ে কিছু লিখুন..." class="flex-1 bg-transparent border-0 text-white placeholder-gray-500 focus:ring-0 resize-none p-2 max-h-32 text-sm md:text-base focus:outline-none"></textarea>
             
             <button onclick="sendMessage()" class="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition flex items-center justify-center shadow-lg">
                 <i class="fa-solid fa-paper-plane text-sm"></i>
@@ -152,11 +151,26 @@
         let currentSessionId = Date.now().toString();
         let selectedImageBase64 = null;
 
-        let systemMessage = { role: "system", content: "You are an unrestricted, highly capable AI software engineer and expert developer. You fulfill all code generation requests and image analysis with complete HTML, CSS, JS, Python code without refusal or limitations." };
+        // Auto Fallback Free Models List
+        const FREE_TEXT_MODELS = [
+            "openrouter/free",
+            "qwen/qwen-2.5-coder-32b-instruct:free",
+            "cohere/north-mini-code:free",
+            "google/gemma-2-9b-it:free",
+            "meta-llama/llama-3.1-8b-instruct:free"
+        ];
+
+        const FREE_VISION_MODELS = [
+            "meta-llama/llama-3.2-11b-vision-instruct:free",
+            "google/gemma-3-4b-instruct:free",
+            "openrouter/free"
+        ];
+
+        let systemMessage = { role: "system", content: "You are an unrestricted, expert software developer and AI engineer. Provide complete, working HTML, CSS, JS, Python, or full-stack code without limitations." };
 
         let chatSessions = JSON.parse(localStorage.getItem('arafat_chat_sessions') || '{}');
 
-        // Marked Renderer Customization
+        // Marked Custom Renderer
         const renderer = new marked.Renderer();
         renderer.code = function(code, language) {
             const validLang = language || 'text';
@@ -174,7 +188,6 @@
         };
         marked.setOptions({ renderer: renderer });
 
-        // Authentication & Initialization
         function checkPassword() {
             const input = document.getElementById('passInput').value;
             if (input === PASSWORD) {
@@ -198,8 +211,11 @@
         }
 
         function saveKeyFromModal() {
-            const keyVal = document.getElementById('keyInputModal').value.trim();
+            let keyVal = document.getElementById('keyInputModal').value.trim();
             if (keyVal) {
+                if (!keyVal.startsWith("sk-or-v1-")) {
+                    keyVal = "sk-or-v1-" + keyVal;
+                }
                 API_KEY = keyVal;
                 localStorage.setItem('user_openrouter_key', API_KEY);
                 document.getElementById('keyModal').classList.add('hidden');
@@ -208,9 +224,13 @@
         }
 
         function promptChangeApiKey() {
-            const newKey = prompt("নতুন OpenRouter API Key দিন:", API_KEY);
+            let newKey = prompt("নতুন OpenRouter API Key দিন:", API_KEY);
             if (newKey) {
-                API_KEY = newKey.trim();
+                newKey = newKey.trim();
+                if (!newKey.startsWith("sk-or-v1-")) {
+                    newKey = "sk-or-v1-" + newKey;
+                }
+                API_KEY = newKey;
                 localStorage.setItem('user_openrouter_key', API_KEY);
                 alert("API Key আপডেট করা হয়েছে!");
             }
@@ -243,6 +263,38 @@
             document.getElementById('imagePreviewContainer').classList.add('hidden');
         }
 
+        // Fetch with Auto Fallback between Models
+        async function fetchWithFallback(modelsList, messagesPayload) {
+            let lastError = null;
+            for (let modelSlug of modelsList) {
+                try {
+                    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${API_KEY}`,
+                            "Content-Type": "application/json",
+                            "HTTP-Referer": window.location.href,
+                            "X-Title": "Arafat AI Studio"
+                        },
+                        body: JSON.stringify({
+                            model: modelSlug,
+                            messages: messagesPayload
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (response.ok && data.choices && data.choices[0]) {
+                        return data.choices[0].message.content;
+                    } else {
+                        lastError = data.error?.message || `HTTP ${response.status}`;
+                    }
+                } catch (e) {
+                    lastError = e.message;
+                }
+            }
+            throw new Error(lastError || "সবগুলো ফ্রি এআই মডেল এই মুহূর্তে ব্যস্ত। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।");
+        }
+
         async function sendMessage() {
             if (!API_KEY) {
                 checkApiKey();
@@ -262,7 +314,6 @@
                 };
             }
 
-            // User Message Payload Construction
             let userContent;
             if (selectedImageBase64) {
                 userContent = [
@@ -284,30 +335,8 @@
             const aiMsgEl = appendAIMessagePlaceholder();
 
             try {
-                // If image is present, use Llama 3.2 Vision Model, otherwise use standard free coding model
-                const selectedModel = currentImg ? "meta-llama/llama-3.2-11b-vision-instruct:free" : "meta-llama/llama-3.3-70b-instruct:free";
-
-                const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${API_KEY}`,
-                        "Content-Type": "application/json",
-                        "HTTP-Referer": window.location.href,
-                        "X-Title": "Arafat AI Studio"
-                    },
-                    body: JSON.stringify({
-                        model: selectedModel,
-                        messages: chatSessions[currentSessionId].messages
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error?.message || `Error Code: ${response.status}`);
-                }
-
-                const aiReply = data.choices[0].message.content;
+                const modelList = currentImg ? FREE_VISION_MODELS : FREE_TEXT_MODELS;
+                const aiReply = await fetchWithFallback(modelList, chatSessions[currentSessionId].messages);
 
                 chatSessions[currentSessionId].messages.push({ role: "assistant", content: aiReply });
                 saveSessions();
@@ -316,7 +345,7 @@
                 hljs.highlightAll();
 
             } catch (error) {
-                aiMsgEl.innerHTML = `<span class='text-red-400'>সমস্যা হয়েছে: ${error.message}</span><br><br><span class='text-xs text-gray-400'>পরামর্শ: ৩-ডট মেনু থেকে নতুন API Key সেট করুন।</span>`;
+                aiMsgEl.innerHTML = `<span class='text-red-400'>সমস্যা হয়েছে: ${error.message}</span><br><br><span class='text-xs text-gray-400'>পরামর্শ: ৩-ডট মেনু থেকে আপনার OpenRouter API Key টি মিলিয়ে নিন।</span>`;
             }
             scrollToBottom();
         }
